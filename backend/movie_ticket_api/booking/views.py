@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Movie, Booking, Comment
+from .models import Movie, Booking, Comment, Like
 from .serializers import (
     MovieSerializer,
     BookingSerializer,
@@ -133,3 +133,42 @@ class CommentView(APIView):
         )
         serializer = CommentSerializer(comment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# Like functionality
+class LikeMovieView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        like, created = Like.objects.get_or_create(user=request.user, movie=movie)
+
+        if created:
+            return Response(
+                {"message": "Movie liked successfully."}, status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"message": "You have already liked this movie."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class UnlikeMovieView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        try:
+            like = Like.objects.get(user=request.user, movie=movie)
+            like.delete()
+            return Response(
+                {"message": "Movie unliked successfully."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Like.DoesNotExist:
+            return Response(
+                {"message": "You have not liked this movie."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

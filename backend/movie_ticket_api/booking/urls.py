@@ -9,6 +9,8 @@ from .views import (
     CommentView,
     RegisterView,
     Welcome,
+    LikeMovieView,
+    UnlikeMovieView,
 )
 
 urlpatterns = [
@@ -29,4 +31,9 @@ urlpatterns = [
     path("movies/<int:movie_id>/", GetMovieById.as_view(), name="get_movie_by_id"),
     path("book-ticket/", BookTicketView.as_view(), name="book_ticket"),
     path("comment/", CommentView.as_view(), name="comment"),
+    # LIKE functionality
+    path("movies/<int:movie_id>/like/", LikeMovieView.as_view(), name="like_movie"),
+    path(
+        "movies/<int:movie_id>/unlike/", UnlikeMovieView.as_view(), name="unlike_movie"
+    ),
 ]
