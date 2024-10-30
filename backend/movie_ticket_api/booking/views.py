@@ -10,6 +10,7 @@ from .serializers import (
     CommentSerializer,
     UserSerializer,
 )
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -40,9 +41,19 @@ class RegisterView(APIView):
 class AddMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
+    # def post(self, request):
+    #     serializer = MovieSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(
+    #             {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
+    #         )
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def post(self, request):
-        serializer = MovieSerializer(data=request.data)
+        data = request.data.copy()
+        serializer = MovieSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(

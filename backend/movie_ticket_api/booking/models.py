@@ -6,7 +6,8 @@ class Movie(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     release_date = models.DateField()
-    image_url = models.URLField(null=True, blank=True)
+    # image_url = models.URLField(null=True, blank=True)
+    image = models.ImageField(upload_to="movies/", null=True, blank=True)
 
 
 class Booking(models.Model):
