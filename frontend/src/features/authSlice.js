@@ -6,9 +6,20 @@ export const registerUser = createAsyncThunk("auth/registerUser", async (userDat
     return response;
 });
 
-export const loginUser = createAsyncThunk("auth/loginUser", async (credentials) => {
-    const response = await HttpService.login(credentials);
-    return response;
+
+export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, { rejectWithValue }) => {
+    try {
+        const response = await HttpService.login(credentials);
+        const { access, refresh } = response;
+
+        if (access && refresh) {
+            return { access, refresh };
+        } else {
+            return rejectWithValue("Invalid username or password.");
+        }
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || "Invalid username or password.");
+    }
 });
 
 export const refreshToken = createAsyncThunk("auth/refreshToken", async (refreshToken) => {
