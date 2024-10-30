@@ -14,6 +14,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
+# welcome string endpoint for testing
+class Welcome(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response("Welcome!", status=status.HTTP_200_OK)
+
+
 # register endpoint
 class RegisterView(APIView):
     permission_classes = [AllowAny]

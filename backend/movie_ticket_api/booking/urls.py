@@ -8,9 +8,12 @@ from .views import (
     BookTicketView,
     CommentView,
     RegisterView,
+    Welcome,
 )
 
 urlpatterns = [
+    # welcome endpoint for testing purpose
+    path("welcome/", Welcome.as_view(), name="welcome"),
     # register endpoint
     path("register/", RegisterView.as_view(), name="register"),
     # ADMIN endpoints
