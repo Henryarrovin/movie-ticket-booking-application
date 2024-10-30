@@ -17,24 +17,24 @@ class HttpService {
     }
 
     async getMovies() {
-        const response = await apiClient.get('/movies/');
+        const response = await apiClient.get('/api/movies/');
         return response.data;
     }
 
     async getMovieById(movieId) {
-        const response = await apiClient.get(`/movies/${movieId}/`);
+        const response = await apiClient.get(`/api/movies/${movieId}/`);
         return response.data;
     }
 
     async addMovie(movieData, token) {
-        const response = await apiClient.post('/admin/add-movie/', movieData, {
+        const response = await apiClient.post('/api/admin/add-movie/', movieData, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
     }
 
     async updateMovie(movieId, movieData, token) {
-        const response = await apiClient.put(`/admin/update-movie/${movieId}/`, movieData, {
+        const response = await apiClient.put(`/api/admin/update-movie/${movieId}/`, movieData, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;

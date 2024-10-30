@@ -13,10 +13,10 @@ export const registerUser = createAsyncThunk("auth/registerUser", async (userDat
 export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, { rejectWithValue }) => {
     try {
         const response = await HttpService.login(credentials);
-        const { access, refresh } = response;
+        const { access, refresh, role } = response;
 
         if (access && refresh) {
-            return { access, refresh };
+            return { access, refresh, role };
         } else {
             return rejectWithValue("Invalid username or password.");
         }
@@ -35,22 +35,27 @@ const authSlice = createSlice({
     initialState: {
         token: localStorage.getItem('authToken') || null,
         refreshToken: localStorage.getItem('refreshToken') || null,
+        role: localStorage.getItem('userRole') || null,
         loading: false,
         error: null,
     },
     reducers: {
         setToken: (state, action) => {
-            const { access, refresh } = action.payload;
+            const { access, refresh, role } = action.payload;
             state.token = access;
             state.refreshToken = refresh;
+            state.role = role;
             localStorage.setItem('authToken', access);
             localStorage.setItem('refreshToken', refresh);
+            localStorage.setItem('userRole', role);
         },
         logOut: (state) => {
             state.token = null;
             state.refreshToken = null;
+            state.role = null;
             localStorage.removeItem('authToken');
             localStorage.removeItem('refreshToken');
+            localStorage.setItem('userRole', role);
         },
     },
     extraReducers: (builder) => {
@@ -70,11 +75,13 @@ const authSlice = createSlice({
             })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
-                const { access, refresh } = action.payload;
+                const { access, refresh, role } = action.payload;
                 state.token = access;
                 state.refreshToken = refresh;
+                state.role = role;
                 localStorage.setItem('authToken', access);
                 localStorage.setItem('refreshToken', refresh);
+                localStorage.setItem('userRole', role);
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
@@ -100,6 +107,8 @@ export const { setToken, logOut } = authSlice.actions;
 export default authSlice.reducer;
 
 export const selectCurrentToken = (state) => state.auth.token;
+
+export const currentRole = (state) => state.auth.role;
 
 export const selectLoading = (state) => state.auth.loading;
 
