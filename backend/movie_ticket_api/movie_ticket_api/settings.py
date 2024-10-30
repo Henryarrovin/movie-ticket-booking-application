@@ -116,6 +116,9 @@ CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
 CORS_ALLOW_HEADERS = ["content-type", "authorization", "x-csrftoken"]
 
+# custom user model
+AUTH_USER_MODEL = "booking.CustomUser"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

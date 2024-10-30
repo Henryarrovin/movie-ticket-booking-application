@@ -11,11 +11,16 @@ from .views import (
     Welcome,
     LikeMovieView,
     UnlikeMovieView,
+    CustomTokenObtainPairView,
 )
 
 urlpatterns = [
     # welcome endpoint for testing purpose
     path("welcome/", Welcome.as_view(), name="welcome"),
+    # login / return token endpoint
+    path(
+        "token/", CustomTokenObtainPairView.as_view(), name="custom_token_obtain_pair"
+    ),
     # register endpoint
     path("register/", RegisterView.as_view(), name="register"),
     # ADMIN endpoints

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,6 +10,7 @@ from .serializers import (
     BookingSerializer,
     CommentSerializer,
     UserSerializer,
+    CustomTokenObtainPairSerializer,
 )
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
@@ -21,6 +23,11 @@ class Welcome(APIView):
 
     def get(self, request):
         return Response("Welcome!", status=status.HTTP_200_OK)
+
+
+# login / return token endpoint
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 # register endpoint
