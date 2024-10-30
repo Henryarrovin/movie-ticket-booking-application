@@ -1,11 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import HttpService from "../services/httpService";
 
-export const registerUser = createAsyncThunk("auth/registerUser", async (userData) => {
-    const response = await HttpService.register(userData);
-    return response;
+export const registerUser = createAsyncThunk("auth/registerUser", async (userData, { rejectWithValue }) => {
+    try {
+        const response = await HttpService.register(userData);
+        return response;
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || "Registration failed.");
+    }
 });
-
 
 export const loginUser = createAsyncThunk("auth/loginUser", async (credentials, { rejectWithValue }) => {
     try {

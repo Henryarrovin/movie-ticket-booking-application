@@ -62,6 +62,7 @@ const Login = () => {
                         {loading ? "Logging in..." : "Login"}
                     </button>
                 </form>
+                <div className='mt-3'>Don't have an account? <a href="/register">register</a></div>
             </div>
         </div>
     );

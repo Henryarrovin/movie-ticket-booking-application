@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 
 class HttpService {
     async register(userData) {
-        const response = await apiClient.post('/register/', userData);
+        const response = await apiClient.post('/api/register/', userData);
         return response.data;
     }
 
