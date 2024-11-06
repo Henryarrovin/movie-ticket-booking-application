@@ -90,7 +90,7 @@ const AdminPage = () => {
   const handleViewBookedMovies = async () => {
     setLoading(true);
     try {
-      const response = await HttpService.viewBookedMovies();
+      const response = await HttpService.viewBookedMovies(token);
       setBookedMovies(response);
     } catch (err) {
       setError(err.response?.data || 'Failed to fetch booked movies');
@@ -116,16 +116,14 @@ const AdminPage = () => {
         </div>
       </nav>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      <div class="container mt-5">
-        <div class="row">
-          <div class="col-6 text-center">
-            <button class="btn btn-primary w-100" onClick={() => setState("ADD_MOVIE")}>Add Movie</button>
+      <div className="container mt-5">
+        <div className="row">
+          <div className="col-6 text-center">
+            <button className="btn btn-primary w-100" onClick={() => setState("ADD_MOVIE")}>Add Movie</button>
           </div>
 
-          <div class="col-6 text-center">
-            <button class="btn btn-secondary w-100" onClick={() => setState("")}>Update Movie</button>
+          <div className="col-6 text-center">
+            <button className="btn btn-secondary w-100" onClick={() => setState("")}>Update Movie</button>
           </div>
         </div>
       </div>
@@ -200,6 +198,8 @@ const AdminPage = () => {
           </div>
         </div>
       }
+
+      {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="card my-4">
         <div className="card-header">View Booked Movies</div>

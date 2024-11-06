@@ -41,7 +41,7 @@ class HttpService {
     }
 
     async viewBookedMovies(token) {
-        const response = await apiClient.get('/admin/view-booked/', {
+        const response = await apiClient.get('/api/admin/view-booked/', {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
