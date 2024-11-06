@@ -40,18 +40,6 @@ const AdminPage = () => {
     formData.append('release_date', movieData.releaseDate);
     formData.append('description', movieData.description);
     formData.append('image', imageFile);
-    console.log("----------------------------------------------------");
-
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-    console.log("----------------------------------------------------");
-    console.log(movieData);
-    console.log("----------------------------------------------------");
-    console.log(imageFile);
-
-    
-
     try {
       await HttpService.addMovie(formData, token);
       alert('Movie added successfully');
@@ -60,7 +48,7 @@ const AdminPage = () => {
       setError(null);
     } catch (err) {
       setError(err.response?.data || 'Failed to add movie');
-      console.error(err);
+      console.error(err.response);
     } finally {
       setLoading(false);
     }
