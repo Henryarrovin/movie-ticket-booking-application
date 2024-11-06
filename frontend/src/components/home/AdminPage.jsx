@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logOut } from '../../features/authSlice';
 import { useDropzone } from 'react-dropzone';
@@ -6,6 +7,7 @@ import HttpService from '../../services/httpService';
 
 const AdminPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [movieData, setMovieData] = useState({ title: '', releaseDate: '', description: '' });
   const [movieId, setMovieId] = useState('');
   const [bookedMovies, setBookedMovies] = useState([]);
@@ -102,6 +104,7 @@ const AdminPage = () => {
 
   const handleLogout = () => {
     dispatch(logOut());
+    navigate("/", { replace: true });
   };
 
   return (

@@ -55,7 +55,7 @@ const authSlice = createSlice({
             state.role = null;
             localStorage.removeItem('authToken');
             localStorage.removeItem('refreshToken');
-            localStorage.setItem('userRole', role);
+            localStorage.removeItem('userRole');
         },
     },
     extraReducers: (builder) => {

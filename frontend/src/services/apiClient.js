@@ -7,4 +7,14 @@ const apiClient = axios.create({
     },
 });
 
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response && error.response.status === 401) {
+        store.dispatch(logOut());
+      }
+      return Promise.reject(error);
+    }
+);
+
 export default apiClient;
