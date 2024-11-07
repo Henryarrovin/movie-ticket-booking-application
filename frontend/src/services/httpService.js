@@ -38,7 +38,10 @@ class HttpService {
 
     async updateMovie(movieId, movieData, token) {
         const response = await apiClient.put(`/api/admin/update-movie/${movieId}/`, movieData, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            },
         });
         return response.data;
     }

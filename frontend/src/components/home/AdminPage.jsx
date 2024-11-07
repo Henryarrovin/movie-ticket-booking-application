@@ -57,13 +57,13 @@ const AdminPage = () => {
   const handleUpdateMovie = async () => {
     setLoading(true);
     const formData = new FormData();
-    formData.append('title', movieData.title);
-    formData.append('release_date', movieData.releaseDate);
-    formData.append('description', movieData.description);
+    if (movieData.title) formData.append('title', movieData.title);
+    if (movieData.releaseDate) formData.append('release_date', movieData.releaseDate);
+    if (movieData.description) formData.append('description', movieData.description);
     if (imageFile) formData.append('image', imageFile);
 
     try {
-      await HttpService.updateMovie(movieId, formData);
+      await HttpService.updateMovie(movieId, formData, token);
       alert('Movie updated successfully');
       setMovieId('');
       setMovieData({ title: '', releaseDate: '', description: '' });
@@ -95,6 +95,16 @@ const AdminPage = () => {
     navigate("/", { replace: true });
   };
 
+  const handlePageStateAdd = () => {
+    setState("ADD_MOVIE");
+    setError(null);
+  }
+
+  const handlePageStateUpdate = () => {
+    setState("UPDATE_MOVIE");
+    setError(null);
+  }
+
   return (
     <div className="container mt-4">
       <nav className="navbar navbar-light bg-light">
@@ -110,11 +120,11 @@ const AdminPage = () => {
       <div className="container mt-5">
         <div className="row">
           <div className="col-6 text-center">
-            <button className="btn btn-primary w-100" onClick={() => setState("ADD_MOVIE")}>Add Movie</button>
+            <button className="btn btn-primary w-100" onClick={handlePageStateAdd}>Add Movie</button>
           </div>
 
           <div className="col-6 text-center">
-            <button className="btn btn-secondary w-100" onClick={() => setState("")}>Update Movie</button>
+            <button className="btn btn-secondary w-100" onClick={handlePageStateUpdate}>Update Movie</button>
           </div>
         </div>
       </div>
@@ -181,9 +191,49 @@ const AdminPage = () => {
                 className="form-control"
                 value={movieId}
                 onChange={(e) => setMovieId(e.target.value)}
+                required
               />
             </div>
-            <button className="btn btn-warning" onClick={handleUpdateMovie} disabled={loading}>
+            <div className="mb-3">
+              <input
+                type="text"
+                placeholder="Title"
+                className="form-control"
+                value={movieData.title}
+                onChange={(e) => setMovieData({ ...movieData, title: e.target.value })}
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                type="date"
+                className="form-control"
+                value={movieData.releaseDate}
+                onChange={(e) => setMovieData({ ...movieData, releaseDate: e.target.value })}
+              />
+            </div>
+            <div className="mb-3">
+              <textarea
+                placeholder="Description"
+                className="form-control"
+                value={movieData.description}
+                onChange={(e) => setMovieData({ ...movieData, description: e.target.value })}
+              />
+            </div>
+
+            <div
+              {...getRootProps({ className: 'dropzone border p-3 mb-3 text-center' })}
+              style={{ border: '2px dashed #007bff', borderRadius: '5px' }}
+            >
+              <input {...getInputProps()} />
+              {isDragActive ? (
+                <p>Drop the image here...</p>
+              ) : (
+                <p>Drag and drop an image here, or click to select an image</p>
+              )}
+              {imageFile && <p className="text-success mt-2">Selected File: {imageFile.name}</p>}
+            </div>
+
+            <button className="btn btn-primary" onClick={handleUpdateMovie} disabled={loading}>
               {loading ? 'Updating...' : 'Update Movie'}
             </button>
           </div>
