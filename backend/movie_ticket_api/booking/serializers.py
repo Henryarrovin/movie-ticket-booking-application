@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Movie, Booking, Comment, Like, CustomUser
 from django.contrib.auth.models import User
+import os
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
@@ -35,6 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MovieSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Movie
@@ -42,6 +44,9 @@ class MovieSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return Like.objects.filter(movie=obj).count()
+
+    def get_image(self, obj):
+        return os.path.basename(obj.image.name) if obj.image else None
 
 
 class BookingSerializer(serializers.ModelSerializer):

@@ -23,3 +23,7 @@ export const likeMovie = async (movieId, token) => {
 export const unlikeMovie = async (movieId, token) => {
     return await HttpService.unlikeMovie(movieId, token);
 };
+
+export const getMoviePhoto = async (photoName) => {
+    return await HttpService.getMoviePhoto();
+}
