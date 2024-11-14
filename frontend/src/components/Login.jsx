@@ -31,7 +31,7 @@ const Login = () => {
     };
 
     return (
-        <div className="login-container d-flex align-items-center justify-content-center">
+        <div className="login-container d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
             <div className="card p-4" style={{ width: '20rem' }}>
                 <h3 className="card-title text-center">Login</h3>
                 <form onSubmit={handleSubmit}>

@@ -32,7 +32,7 @@ const Register = () => {
     };
 
     return (
-        <div className="register-container d-flex align-items-center justify-content-center">
+        <div className="register-container d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
             <div className="card p-4" style={{ width: '20rem' }}>
                 <h3 className="card-title text-center">Register</h3>
                 <form onSubmit={handleSubmit}>
