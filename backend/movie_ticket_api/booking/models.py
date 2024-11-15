@@ -32,8 +32,8 @@ class Movie(models.Model):
     # image_url = models.URLField(null=True, blank=True)
     image = models.ImageField(upload_to="movies/", null=True, blank=True)
 
-    def __str__(self):
-        return self.title
+    # def __str__(self):
+    #     return self.title
 
 
 class Booking(models.Model):

@@ -15,6 +15,8 @@ from .serializers import (
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 
 # welcome string endpoint for testing
@@ -45,27 +47,70 @@ class RegisterView(APIView):
 
 
 # ADMIN Endpoints
+# class AddMovieView(APIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+#     parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+#     # def post(self, request):
+#     #     serializer = MovieSerializer(data=request.data)
+#     #     if serializer.is_valid():
+#     #         serializer.save()
+#     #         return Response(
+#     #             {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
+#     #         )
+#     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     def post(self, request):
+#         data = request.data.copy()
+#         print(f"Request data: {data}")
+#         serializer = MovieSerializer(data=data)
+#         if serializer.is_valid():
+#             # serializer.save()
+#             movie = serializer.save()
+#             print(f"Saved Image Path: {movie.image}")
+#             return Response(
+#                 {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
+#             )
+#         else:
+#             print(f"Errors: {serializer.errors}")
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     # def post(self, request):
+#     #     serializer = MovieSerializer(data=request.data)
+#     #     if serializer.is_valid():
+#     #         # serializer.save()
+#     #         movie = serializer.save()
+#     #         print(f"Saved Image Path: {movie.image}")
+#     #         return Response(
+#     #             {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
+#     #         )
+#     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class AddMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
-    # def post(self, request):
-    #     serializer = MovieSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(
-    #             {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
-    #         )
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def post(self, request):
-        data = request.data.copy()
-        serializer = MovieSerializer(data=data)
+        print(f"Request data: {request.data}")
+
+        serializer = MovieSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            image_file = request.FILES.get("image")
+            if image_file:
+                file_path = default_storage.save(
+                    f"{image_file.name}", ContentFile(image_file.read())
+                )
+                serializer.validated_data["image"] = file_path
+
+            movie = serializer.save()
+            print(f"Saved Image Path: {movie.image}")
             return Response(
                 {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
             )
+        else:
+            print(f"Errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

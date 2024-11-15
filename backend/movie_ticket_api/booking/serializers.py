@@ -3,6 +3,8 @@ from .models import Movie, Booking, Comment, Like, CustomUser
 from django.contrib.auth.models import User
 import os
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.conf import settings
+from urllib.parse import urljoin
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -47,6 +49,9 @@ class MovieSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         return os.path.basename(obj.image.name) if obj.image else None
+        # if obj.image:
+        #     return urljoin(settings.MEDIA_URL, obj.image.name)
+        # return None
 
 
 class BookingSerializer(serializers.ModelSerializer):
