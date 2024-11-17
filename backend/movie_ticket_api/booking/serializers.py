@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Movie, Booking, Comment, Like, CustomUser
+from .models import Movie, Booking, Comment, Like, CustomUser, Theatre, MovieShow
 from django.contrib.auth.models import User
 import os
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -36,9 +36,24 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+class TheatreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Theatre
+        fields = "__all__"
+
+
+class MovieShowSerializer(serializers.ModelSerializer):
+    theatre = TheatreSerializer()
+
+    class Meta:
+        model = MovieShow
+        fields = ["id", "movie", "theatre", "start_time", "end_time"]
+
+
 class MovieSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    shows = MovieShowSerializer(many=True, read_only=True)
 
     class Meta:
         model = Movie
@@ -55,8 +70,7 @@ class MovieSerializer(serializers.ModelSerializer):
 
 
 class BookingSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    movie = MovieSerializer()
+    show = MovieShowSerializer()
 
     class Meta:
         model = Booking

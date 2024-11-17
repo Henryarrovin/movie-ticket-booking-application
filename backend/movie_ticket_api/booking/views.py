@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Movie, Booking, Comment, Like
+from .models import Movie, Booking, Comment, Like, Theatre, MovieShow, Seat
 from .serializers import (
     MovieSerializer,
     BookingSerializer,
@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.db import transaction
 
 
 # welcome string endpoint for testing
@@ -87,30 +88,84 @@ class RegisterView(APIView):
 #     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# class AddMovieView(APIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+#     parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+#     def post(self, request):
+#         print(f"Request data: {request.data}")
+
+#         serializer = MovieSerializer(data=request.data)
+#         if serializer.is_valid():
+#             image_file = request.FILES.get("image")
+#             if image_file:
+#                 file_path = default_storage.save(
+#                     f"{image_file.name}", ContentFile(image_file.read())
+#                 )
+#                 serializer.validated_data["image"] = file_path
+
+#             movie = serializer.save()
+#             print(f"Saved Image Path: {movie.image}")
+#             return Response(
+#                 {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
+#             )
+#         else:
+#             print(f"Errors: {serializer.errors}")
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class AddMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def post(self, request):
-        print(f"Request data: {request.data}")
-
         serializer = MovieSerializer(data=request.data)
+
         if serializer.is_valid():
             image_file = request.FILES.get("image")
             if image_file:
                 file_path = default_storage.save(
-                    f"{image_file.name}", ContentFile(image_file.read())
+                    f"movies/{image_file.name}", ContentFile(image_file.read())
                 )
                 serializer.validated_data["image"] = file_path
 
             movie = serializer.save()
-            print(f"Saved Image Path: {movie.image}")
+
+            shows = request.data.get("shows", [])
+            for show in shows:
+                if isinstance(show, dict):
+                    theatre_id = show.get("theatre_id")
+                    start_time = show.get("start_time")
+                    end_time = show.get("end_time")
+
+                    if theatre_id and start_time and end_time:
+                        theatre = get_object_or_404(Theatre, id=theatre_id)
+
+                        MovieShow.objects.create(
+                            movie=movie,
+                            theatre=theatre,
+                            start_time=start_time,
+                            end_time=end_time,
+                        )
+                    else:
+                        return Response(
+                            {"error": "Invalid show data provided."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    return Response(
+                        {"error": "Each show must be a dictionary."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            print("Shows Data: ", request.data.get("shows", []))
+
             return Response(
-                {"message": "Movie added successfully"}, status=status.HTTP_201_CREATED
+                {"message": "Movie added successfully", "movie": serializer.data},
+                status=status.HTTP_201_CREATED,
             )
-        else:
-            print(f"Errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -160,16 +215,73 @@ class GetMovieById(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# class BookTicketView(APIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         movie_id = request.data.get("movie_id")
+#         movie = get_object_or_404(Movie, id=movie_id)
+#         booking = Booking.objects.create(user=request.user, movie=movie)
+#         serializer = BookingSerializer(booking)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 class BookTicketView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        movie_id = request.data.get("movie_id")
-        movie = get_object_or_404(Movie, id=movie_id)
-        booking = Booking.objects.create(user=request.user, movie=movie)
-        serializer = BookingSerializer(booking)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        show_id = request.data.get("show_id")
+        seat_ids = request.data.get("seats", [])
+
+        if not show_id:
+            return Response(
+                {"error": "Show ID is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not seat_ids:
+            return Response(
+                {"error": "No seats selected for booking."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        show = get_object_or_404(MovieShow, id=show_id)
+        seats = Seat.objects.filter(id__in=seat_ids, theatre=show.theatre)
+
+        if len(seats) != len(seat_ids):
+            return Response(
+                {"error": "One or more seats are invalid for this theatre."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            already_booked = Booking.objects.filter(show=show, seats__in=seats).exists()
+            if already_booked:
+                return Response(
+                    {"error": "One or more selected seats are already booked."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            booking = Booking.objects.create(user=request.user, show=show)
+            booking.seats.set(seats)
+            booking.save()
+
+        seat_numbers = [seat.seat_number for seat in seats]
+        return Response(
+            {
+                "message": "Ticket booked successfully.",
+                "booking_id": booking.id,
+                "show": {
+                    "movie": show.movie.title,
+                    "theatre": show.theatre.name,
+                    "start_time": show.start_time,
+                    "end_time": show.end_time,
+                },
+                "seats": seat_numbers,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CommentView(APIView):
