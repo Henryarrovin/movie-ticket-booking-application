@@ -12,6 +12,10 @@ from .views import (
     LikeMovieView,
     UnlikeMovieView,
     CustomTokenObtainPairView,
+    ListTheatreView,
+    CreateTheatreView,
+    DeleteTheatreView,
+    DeleteMovieView,
 )
 
 urlpatterns = [
@@ -31,6 +35,11 @@ urlpatterns = [
         name="update_movie",
     ),
     path("admin/view-booked/", ViewBookedMovies.as_view(), name="view_booked"),
+    path(
+        "admin/delete-movie/<int:movie_id>/",
+        DeleteMovieView.as_view(),
+        name="delete_movie",
+    ),
     # USER endpoints
     path("movies/", ViewMovies.as_view(), name="view_movies"),
     path("movies/<int:movie_id>/", GetMovieById.as_view(), name="get_movie_by_id"),
@@ -40,5 +49,13 @@ urlpatterns = [
     path("movies/<int:movie_id>/like/", LikeMovieView.as_view(), name="like_movie"),
     path(
         "movies/<int:movie_id>/unlike/", UnlikeMovieView.as_view(), name="unlike_movie"
+    ),
+    # Theatre
+    path("theatres/", ListTheatreView.as_view(), name="list_theatres"),
+    path("theatres/create/", CreateTheatreView.as_view(), name="create_theatre"),
+    path(
+        "admin/delete-theatre/<int:theatre_id>/",
+        DeleteTheatreView.as_view(),
+        name="delete_theatre",
     ),
 ]

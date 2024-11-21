@@ -39,21 +39,22 @@ class UserSerializer(serializers.ModelSerializer):
 class TheatreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theatre
-        fields = "__all__"
+        fields = ["id", "name", "location", "capacity"]
 
 
 class MovieShowSerializer(serializers.ModelSerializer):
-    theatre = TheatreSerializer()
+    # theatre = TheatreSerializer()
 
     class Meta:
         model = MovieShow
-        fields = ["id", "movie", "theatre", "start_time", "end_time"]
+        # fields = ["id", "movie", "theatre", "start_time", "end_time"]
+        fields = ["id", "theatre", "start_time", "end_time"]
 
 
 class MovieSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
-    shows = MovieShowSerializer(many=True, read_only=True)
+    shows = MovieShowSerializer(many=True)
 
     class Meta:
         model = Movie
@@ -67,6 +68,15 @@ class MovieSerializer(serializers.ModelSerializer):
         # if obj.image:
         #     return urljoin(settings.MEDIA_URL, obj.image.name)
         # return None
+
+    def create(self, validated_data):
+        shows_data = validated_data.pop("shows", [])
+        movie = Movie.objects.create(**validated_data)
+
+        for show_data in shows_data:
+            MovieShow.objects.create(movie=movie, **show_data)
+
+        return movie
 
 
 class BookingSerializer(serializers.ModelSerializer):

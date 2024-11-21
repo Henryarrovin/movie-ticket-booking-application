@@ -11,6 +11,7 @@ from .serializers import (
     CommentSerializer,
     UserSerializer,
     CustomTokenObtainPairSerializer,
+    TheatreSerializer,
 )
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
@@ -18,6 +19,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
+import json
 
 
 # welcome string endpoint for testing
@@ -118,55 +120,54 @@ class RegisterView(APIView):
 class AddMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        serializer = MovieSerializer(data=request.data)
+        print("Request data:", request.data)
+        print("Files:", request.FILES)
 
-        if serializer.is_valid():
-            image_file = request.FILES.get("image")
-            if image_file:
-                file_path = default_storage.save(
-                    f"movies/{image_file.name}", ContentFile(image_file.read())
+        shows = request.data.get("shows", None)
+        # if shows:
+        #     try:
+        #         request.data["shows"] = json.loads(shows)
+        #     except json.JSONDecodeError:
+        #         return Response(
+        #             {"error": "Invalid format for 'shows' field."},
+        #             status=status.HTTP_400_BAD_REQUEST,
+        #         )
+        if shows:
+            try:
+                shows = json.loads(shows)
+            except json.JSONDecodeError:
+                return Response(
+                    {"error": "Invalid format for 'shows' field."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-                serializer.validated_data["image"] = file_path
 
-            movie = serializer.save()
+        serializer = MovieSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            shows = request.data.get("shows", [])
-            for show in shows:
-                if isinstance(show, dict):
-                    theatre_id = show.get("theatre_id")
-                    start_time = show.get("start_time")
-                    end_time = show.get("end_time")
-
-                    if theatre_id and start_time and end_time:
-                        theatre = get_object_or_404(Theatre, id=theatre_id)
-
-                        MovieShow.objects.create(
-                            movie=movie,
-                            theatre=theatre,
-                            start_time=start_time,
-                            end_time=end_time,
-                        )
-                    else:
-                        return Response(
-                            {"error": "Invalid show data provided."},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                else:
-                    return Response(
-                        {"error": "Each show must be a dictionary."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            print("Shows Data: ", request.data.get("shows", []))
-
-            return Response(
-                {"message": "Movie added successfully", "movie": serializer.data},
-                status=status.HTTP_201_CREATED,
+        image_file = request.FILES.get("image")
+        if image_file:
+            if not image_file.content_type.startswith("image/"):
+                return Response(
+                    {"error": "Invalid image type. Only images are allowed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            file_path = default_storage.save(
+                f"movies/{image_file.name}", ContentFile(image_file.read())
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.validated_data["image"] = file_path
+
+        movie = serializer.save()
+        return Response(
+            {
+                "message": "Movie added successfully",
+                "movie": MovieSerializer(movie).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class UpdateMovieView(APIView):
@@ -192,6 +193,18 @@ class ViewBookedMovies(APIView):
         bookings = Booking.objects.all()
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DeleteMovieView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request, movie_id):
+        movie = get_object_or_404(Movie, id=movie_id)
+        movie.delete()
+        return Response(
+            {"message": "Movie deleted successfully"}, status=status.HTTP_204_NO_CONTENT
+        )
 
 
 # USER Endpoints
@@ -336,3 +349,45 @@ class UnlikeMovieView(APIView):
                 {"message": "You have not liked this movie."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+# theatre
+class CreateTheatreView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request):
+        serializer = TheatreSerializer(data=request.data)
+        if serializer.is_valid():
+            theatre = serializer.save()
+            return Response(
+                {
+                    "message": "Theatre created successfully",
+                    "theatre": TheatreSerializer(theatre).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListTheatreView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        theatres = Theatre.objects.all()
+        serializer = TheatreSerializer(theatres, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DeleteTheatreView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request, theatre_id):
+        theatre = get_object_or_404(Theatre, id=theatre_id)
+        theatre.delete()
+        return Response(
+            {"message": "Theatre deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT,
+        )

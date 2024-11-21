@@ -34,6 +34,7 @@ class HttpService {
     async addMovie(movieData, token) {
         const response = await apiClient.post('/api/admin/add-movie/', movieData, {
             headers: {
+                // 'content-Type': 'application/json',
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
             },
@@ -88,6 +89,13 @@ class HttpService {
 
     async getMoviePhoto() {
         const response = await apiClient.get(`/media`);
+        return response.data;
+    }
+
+    async getTheatres(token) {
+        const response = await apiClient.get(`/api/theatres/`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
         return response.data;
     }
 }
