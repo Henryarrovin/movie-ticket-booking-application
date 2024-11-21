@@ -95,7 +95,7 @@ class HttpService {
     async getTheatres(token) {
         const response = await apiClient.get(`/api/theatres/`, {
             headers: { Authorization: `Bearer ${token}` },
-        });
+        });        
         return response.data;
     }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logOut } from '../../features/authSlice';
@@ -393,30 +393,46 @@ const AdminPage = () => {
     start_time: "",
     end_time: "",
   });
-  const [theatres, setTheatres] = useState([]); // Initialize as an empty array
+  const [theatres, setTheatres] = useState([]);
 
   const token = localStorage.getItem('authToken');
 
-  useEffect(() => {
-    if (!token) {
-      console.error("Token is missing");
-      return;
+  // useEffect(() => {
+  //   if (!token) {
+  //     console.error("Token is missing");
+  //     return;
+  //   }
+  //   const fetchTheatres = async () => {
+  //     try {
+  //       setLoading(true);           
+  //       const response = await HttpService.getTheatres(token);
+  //       console.log("API Response:", response.data);
+  //       setTheatres(response.data);
+  //       console.log("Inside useEffect", theatres);
+  //     } catch (err) {
+  //       setError("Failed to fetch theatres");
+  //       console.error("Error fetching theatres:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchTheatres();
+  // }, [theatres]);
+
+  const fetchTheatres = async () => {
+    try {
+      setTheatres(await HttpService.getTheatres(token));
+    } catch (error) {
+      setError("Failed to fetch theatres");
+      console.log(error);
     }
-    // Fetch available theatres when the component mounts
-    const fetchTheatres = async () => {
-      try {
-        const response = await HttpService.getTheatres(token);
-        console.log("API Response:", response.data);
-        setTheatres(response.data);
-      } catch (err) {
-        setError("Failed to fetch theatres");
-        console.error("Error fetching theatres:", err);
-      }
-    };
+  }
 
-    fetchTheatres();
+  useEffect(() => {
+    if(token) fetchTheatres();
   }, [token]);
-
+  
   const onDrop = (acceptedFiles) => {
     setImageFile(acceptedFiles[0]);
   };
