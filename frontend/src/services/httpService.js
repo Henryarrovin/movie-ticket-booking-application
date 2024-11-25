@@ -76,14 +76,21 @@ class HttpService {
     }
 
     async likeMovie(movieId, token) {
-        const response = await apiClient.post(`/movies/${movieId}/like/`, {}, {
+        const response = await apiClient.post(`/api/movies/${movieId}/like/`, {}, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
     }
 
     async unlikeMovie(movieId, token) {
-        const response = await apiClient.post(`/movies/${movieId}/unlike/`, {}, {
+        const response = await apiClient.delete(`/api/movies/${movieId}/unlike/`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    }
+
+    async getLikedMovies(token) {
+        const response = await apiClient.get(`/api/movies/liked-movies/`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;

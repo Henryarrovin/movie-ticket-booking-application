@@ -13,6 +13,7 @@ from .serializers import (
     CustomTokenObtainPairSerializer,
     TheatreSerializer,
     MovieShowSerializer,
+    LikedMovieSerializer,
 )
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
@@ -512,6 +513,18 @@ class UnlikeMovieView(APIView):
                 {"message": "You have not liked this movie."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class GetLikedMoviesView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        liked_movies = Like.objects.filter(user=request.user).select_related("movie")
+        serializer = LikedMovieSerializer(
+            [like.movie for like in liked_movies], many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # theatre

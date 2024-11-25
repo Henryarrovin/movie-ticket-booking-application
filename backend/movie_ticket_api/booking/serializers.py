@@ -135,3 +135,14 @@ class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
         fields = ["user", "movie"]
+
+
+class LikedMovieSerializer(serializers.ModelSerializer):
+    likes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Movie
+        fields = ["id", "title", "description", "release_date", "image", "likes_count"]
+
+    def get_likes_count(self, obj):
+        return Like.objects.filter(movie=obj).count()

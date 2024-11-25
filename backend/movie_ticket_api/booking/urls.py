@@ -17,6 +17,7 @@ from .views import (
     DeleteTheatreView,
     DeleteMovieView,
     GetAvailableSeatsView,
+    GetLikedMoviesView,
 )
 
 urlpatterns = [
@@ -56,6 +57,7 @@ urlpatterns = [
     path(
         "movies/<int:movie_id>/unlike/", UnlikeMovieView.as_view(), name="unlike_movie"
     ),
+    path("movies/liked-movies/", GetLikedMoviesView.as_view(), name="liked-movies"),
     # Theatre
     path("theatres/", ListTheatreView.as_view(), name="list_theatres"),
     path("theatres/create/", CreateTheatreView.as_view(), name="create_theatre"),
