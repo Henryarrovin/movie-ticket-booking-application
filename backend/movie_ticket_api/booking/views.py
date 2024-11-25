@@ -21,6 +21,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
 import json
+from django.db import connection
 
 
 # welcome string endpoint for testing
@@ -154,8 +155,15 @@ class AddMovieView(APIView):
 
             serializer = MovieSerializer(data=movie_data)
             if not serializer.is_valid():
-                print("Serializer errors:", serializer.errors)  # Log serializer errors
+                print("Serializer errors:", serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            image_file = request.FILES.get("image")
+            if image_file:
+                file_path = default_storage.save(
+                    f"{image_file.name}", ContentFile(image_file.read())
+                )
+                serializer.validated_data["image"] = file_path
 
             movie = serializer.save()
 
@@ -171,7 +179,7 @@ class AddMovieView(APIView):
                 )
 
                 for seat_number in range(1, theatre.capacity + 1):
-                    Seat.objects.create(
+                    Seat.objects.get_or_create(
                         theatre=theatre,
                         show=movie_show,
                         seat_number=f"A{seat_number}",
@@ -402,7 +410,7 @@ class BookTicketView(APIView):
 
             booking = Booking.objects.create(user=request.user, show=show)
             booking.seats.set(seats)
-            booking.save()
+            # booking.save()
 
             for seat in seats:
                 seat.is_booked = True
@@ -430,7 +438,10 @@ class GetAvailableSeatsView(APIView):
         try:
             show = MovieShow.objects.get(id=show_id)
             available_seats = Seat.objects.filter(theatre=show.theatre, is_booked=False)
+            print(connection.queries)
             seat_numbers = [seat.seat_number for seat in available_seats]
+            print(f"Available seats count: {len(seat_numbers)}")
+            print(f"Available seats details: {seat_numbers}")
             return Response(
                 {"available_seats": seat_numbers}, status=status.HTTP_200_OK
             )
