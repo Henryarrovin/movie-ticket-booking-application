@@ -3,6 +3,7 @@ import MovieCarousel from '../carousal/MovieCarousal';
 import { useDispatch } from 'react-redux';
 import { logOut } from '../../features/authSlice';
 import { useNavigate } from 'react-router-dom';
+import MovieBooking from './MovieBooking';
 
 const UserPage = () => {
   const dispatch = useDispatch();
@@ -25,6 +26,9 @@ const UserPage = () => {
         </div>
       </nav>
       <MovieCarousel />
+      <div className="container mt-4">
+        <MovieBooking />
+      </div>
     </div>
   )
 }

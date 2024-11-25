@@ -664,19 +664,54 @@ const AdminPage = () => {
   };
   
 
+  // const handleUpdateMovie = async () => {
+  //   setLoading(true);
+  //   const formData = new FormData();
+  //   if (movieData.title) formData.append('title', movieData.title);
+  //   if (movieData.releaseDate) formData.append('release_date', movieData.releaseDate);
+  //   if (movieData.description) formData.append('description', movieData.description);
+  //   if (imageFile) formData.append('image', imageFile);
+
+  //   try {
+  //     await HttpService.updateMovie(movieId, formData, token);
+  //     alert('Movie updated successfully');
+  //     setMovieId('');
+  //     setMovieData({ title: '', releaseDate: '', description: '' });
+  //     setImageFile(null);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError(err.response?.data || 'Failed to update movie');
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleUpdateMovie = async () => {
     setLoading(true);
     const formData = new FormData();
+    
     if (movieData.title) formData.append('title', movieData.title);
     if (movieData.releaseDate) formData.append('release_date', movieData.releaseDate);
     if (movieData.description) formData.append('description', movieData.description);
     if (imageFile) formData.append('image', imageFile);
 
+    if (movieData.shows && movieData.shows.length > 0) {
+        movieData.shows.forEach((show, index) => {
+            if (show.id) {
+                formData.append(`shows[${index}][id]`, show.id);
+            }
+            formData.append(`shows[${index}][theatre]`, show.theatre);
+            formData.append(`shows[${index}][start_time]`, show.start_time);
+            formData.append(`shows[${index}][end_time]`, show.end_time);
+        });
+    }
+
     try {
       await HttpService.updateMovie(movieId, formData, token);
       alert('Movie updated successfully');
       setMovieId('');
-      setMovieData({ title: '', releaseDate: '', description: '' });
+      setMovieData({ title: '', releaseDate: '', description: '', shows: [] }); // Reset shows as well
       setImageFile(null);
       setError(null);
     } catch (err) {

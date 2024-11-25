@@ -45,9 +45,18 @@ class Theatre(models.Model):
         return self.name
 
 
+# class Seat(models.Model):
+#     theatre = models.ForeignKey(Theatre, on_delete=models.CASCADE, related_name="seats")
+#     seat_number = models.CharField(max_length=10)
+
+#     def __str__(self):
+#         return f"{self.theatre.name} - {self.seat_number}"
+
+
 class Seat(models.Model):
     theatre = models.ForeignKey(Theatre, on_delete=models.CASCADE, related_name="seats")
     seat_number = models.CharField(max_length=10)
+    is_booked = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.theatre.name} - {self.seat_number}"

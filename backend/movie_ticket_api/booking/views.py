@@ -12,6 +12,7 @@ from .serializers import (
     UserSerializer,
     CustomTokenObtainPairSerializer,
     TheatreSerializer,
+    MovieShowSerializer,
 )
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
@@ -172,6 +173,21 @@ class AddMovieView(APIView):
         )
 
 
+# class UpdateMovieView(APIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+
+#     def put(self, request, movie_id):
+#         movie = get_object_or_404(Movie, id=movie_id)
+#         serializer = MovieSerializer(movie, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(
+#                 {"message": "Movie updated successfully"}, status=status.HTTP_200_OK
+#             )
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UpdateMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -179,11 +195,36 @@ class UpdateMovieView(APIView):
     def put(self, request, movie_id):
         movie = get_object_or_404(Movie, id=movie_id)
         serializer = MovieSerializer(movie, data=request.data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
+
+            shows_data = request.data.get("shows", [])
+            for show_data in shows_data:
+                if show_data.get("id"):
+                    movie_show = get_object_or_404(MovieShow, id=show_data["id"])
+                    show_serializer = MovieShowSerializer(
+                        movie_show, data=show_data, partial=True
+                    )
+                    if show_serializer.is_valid():
+                        show_serializer.save()
+                    else:
+                        return Response(
+                            show_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                        )
+                else:
+                    show_serializer = MovieShowSerializer(data=show_data)
+                    if show_serializer.is_valid():
+                        show_serializer.save(movie=movie)
+                    else:
+                        return Response(
+                            show_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                        )
+
             return Response(
                 {"message": "Movie updated successfully"}, status=status.HTTP_200_OK
             )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -242,6 +283,67 @@ class GetMovieById(APIView):
 #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+# class BookTicketView(APIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         show_id = request.data.get("show_id")
+#         seat_ids = request.data.get("seats", [])
+
+#         if not show_id:
+#             return Response(
+#                 {"error": "Show ID is required."},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not seat_ids:
+#             return Response(
+#                 {"error": "No seats selected for booking."},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         show = get_object_or_404(MovieShow, id=show_id)
+#         seats = Seat.objects.filter(id__in=seat_ids, theatre=show.theatre)
+
+#         if len(seats) != len(seat_ids):
+#             return Response(
+#                 {"error": "One or more seats are invalid for this theatre."},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         with transaction.atomic():
+#             already_booked = Booking.objects.filter(show=show, seats__in=seats).exists()
+#             if already_booked:
+#                 return Response(
+#                     {"error": "One or more selected seats are already booked."},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+
+#             booking = Booking.objects.create(user=request.user, show=show)
+#             booking.seats.set(seats)
+#             booking.save()
+
+#             for seat in seats:
+#                 seat.is_booked = True
+#                 seat.save()
+
+#         seat_numbers = [seat.seat_number for seat in seats]
+#         return Response(
+#             {
+#                 "message": "Ticket booked successfully.",
+#                 "booking_id": booking.id,
+#                 "show": {
+#                     "movie": show.movie.title,
+#                     "theatre": show.theatre.name,
+#                     "start_time": show.start_time,
+#                     "end_time": show.end_time,
+#                 },
+#                 "seats": seat_numbers,
+#             },
+#             status=status.HTTP_201_CREATED,
+#         )
+
+
 class BookTicketView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -262,11 +364,11 @@ class BookTicketView(APIView):
             )
 
         show = get_object_or_404(MovieShow, id=show_id)
-        seats = Seat.objects.filter(id__in=seat_ids, theatre=show.theatre)
 
+        seats = Seat.objects.filter(id__in=seat_ids, theatre=show.theatre)
         if len(seats) != len(seat_ids):
             return Response(
-                {"error": "One or more seats are invalid for this theatre."},
+                {"error": "One or more selected seats are invalid for this theatre."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -281,6 +383,10 @@ class BookTicketView(APIView):
             booking = Booking.objects.create(user=request.user, show=show)
             booking.seats.set(seats)
             booking.save()
+
+            for seat in seats:
+                seat.is_booked = True
+                seat.save()
 
         seat_numbers = [seat.seat_number for seat in seats]
         return Response(
@@ -297,6 +403,21 @@ class BookTicketView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class GetAvailableSeatsView(APIView):
+    def get(self, request, show_id):
+        try:
+            show = MovieShow.objects.get(id=show_id)
+            available_seats = Seat.objects.filter(theatre=show.theatre, is_booked=False)
+            seat_numbers = [seat.seat_number for seat in available_seats]
+            return Response(
+                {"available_seats": seat_numbers}, status=status.HTTP_200_OK
+            )
+        except MovieShow.DoesNotExist:
+            return Response(
+                {"error": "Show not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class CommentView(APIView):

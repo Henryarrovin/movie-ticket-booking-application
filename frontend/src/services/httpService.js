@@ -26,8 +26,12 @@ class HttpService {
         return response.data;
     }
 
-    async getMovieById(movieId) {
-        const response = await apiClient.get(`/api/movies/${movieId}/`);
+    async getMovieById(movieId, token) {
+        const response = await apiClient.get(`/api/movies/${movieId}/`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+        });
         return response.data;
     }
 
@@ -58,7 +62,7 @@ class HttpService {
     }
 
     async bookTicket(ticketData, token) {
-        const response = await apiClient.post('/book-ticket/', ticketData, {
+        const response = await apiClient.post('/api/book-ticket/', ticketData, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
@@ -95,6 +99,12 @@ class HttpService {
             headers: { Authorization: `Bearer ${token}` },
         });        
         return response.data;
+    }
+
+    async getAvailableSeats(showId, token) {
+        const response = await apiClient.get(`/api/shows/${showId}/available-seats/`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
     }
 }
 

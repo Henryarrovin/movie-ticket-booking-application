@@ -16,6 +16,7 @@ from .views import (
     CreateTheatreView,
     DeleteTheatreView,
     DeleteMovieView,
+    GetAvailableSeatsView,
 )
 
 urlpatterns = [
@@ -45,6 +46,11 @@ urlpatterns = [
     path("movies/<int:movie_id>/", GetMovieById.as_view(), name="get_movie_by_id"),
     path("book-ticket/", BookTicketView.as_view(), name="book_ticket"),
     path("comment/", CommentView.as_view(), name="comment"),
+    path(
+        "shows/<int:show_id>/available-seats/",
+        GetAvailableSeatsView.as_view(),
+        name="get_available_seats",
+    ),
     # LIKE functionality
     path("movies/<int:movie_id>/like/", LikeMovieView.as_view(), name="like_movie"),
     path(
