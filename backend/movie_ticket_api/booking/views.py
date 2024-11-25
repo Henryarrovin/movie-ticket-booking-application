@@ -215,15 +215,24 @@ class AddMovieView(APIView):
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# NOT YET FULLY DEVELOPED
 class UpdateMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def put(self, request, movie_id):
         movie = get_object_or_404(Movie, id=movie_id)
-        serializer = MovieSerializer(movie, data=request.data, partial=True)
 
+        print("Request data:", request.data)
+        print("Files:", request.FILES)
+
+        if "image" in request.FILES:
+            image_file = request.FILES["image"]
+            file_path = default_storage.save(
+                f"{image_file.name}", ContentFile(image_file.read())
+            )
+            request.data["image"] = file_path
+
+        serializer = MovieSerializer(movie, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
 
