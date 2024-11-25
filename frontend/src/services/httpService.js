@@ -105,6 +105,7 @@ class HttpService {
         const response = await apiClient.get(`/api/shows/${showId}/available-seats/`, {
             headers: { Authorization: `Bearer ${token}` },
         });
+        return response.data;
     }
 }
 

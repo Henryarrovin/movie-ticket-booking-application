@@ -53,15 +53,6 @@ class Theatre(models.Model):
 #         return f"{self.theatre.name} - {self.seat_number}"
 
 
-class Seat(models.Model):
-    theatre = models.ForeignKey(Theatre, on_delete=models.CASCADE, related_name="seats")
-    seat_number = models.CharField(max_length=10)
-    is_booked = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.theatre.name} - {self.seat_number}"
-
-
 class MovieShow(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name="shows")
     theatre = models.ForeignKey(Theatre, on_delete=models.CASCADE)
@@ -70,6 +61,16 @@ class MovieShow(models.Model):
 
     def __str__(self):
         return f"{self.movie.title} at {self.theatre.name} ({self.start_time} - {self.end_time})"
+
+
+class Seat(models.Model):
+    theatre = models.ForeignKey(Theatre, on_delete=models.CASCADE, related_name="seats")
+    show = models.ForeignKey(MovieShow, on_delete=models.CASCADE)  # added
+    seat_number = models.CharField(max_length=10)
+    is_booked = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.theatre.name} - {self.seat_number}"
 
 
 class Booking(models.Model):

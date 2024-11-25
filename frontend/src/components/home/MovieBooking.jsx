@@ -34,6 +34,11 @@ const MovieBooking = () => {
     fetchMovies();
   }, [token]);
 
+  // useEffect(() => {
+  //   console.log('Available Seats:', availableSeats);
+  // }, [availableSeats]);
+
+
   const handleMovieChange = async (event) => {
     const movieId = event.target.value;
     setSelectedMovie(movieId);
@@ -51,11 +56,12 @@ const MovieBooking = () => {
     const showId = event.target.value;
     setSelectedShow(showId);
     try {
-      const seats = await httpService.getAvailableSeats(showId, token);
-      setAvailableSeats(Array.isArray(seats) ? seats : []);
+        const response = await httpService.getAvailableSeats(showId, token);
+        console.log('Available seats response:', response);
+        setAvailableSeats(Array.isArray(response.available_seats) ? response.available_seats : []);
     } catch (error) {
-      console.error('Failed to fetch available seats', error);
-      setAvailableSeats([]);
+        console.error('Failed to fetch available seats', error);
+        setAvailableSeats([]);
     }
   };
 

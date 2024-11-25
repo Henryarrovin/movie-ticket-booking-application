@@ -722,16 +722,17 @@ const AdminPage = () => {
     }
   };
 
+
   const handleViewBookedMovies = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await HttpService.viewBookedMovies(token);
-      setBookedMovies(response.data.shows);
+        setBookedMovies(await HttpService.viewBookedMovies(token) || []);
     } catch (err) {
-      setError(err.response?.data || 'Failed to fetch booked movies');
-      console.error(err);
+        setError(err.response?.data || 'Failed to fetch booked movies');
+        console.error(err);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -883,14 +884,41 @@ const AdminPage = () => {
             <button className="btn btn-success" onClick={handleAddMovie}>
               {loading ? "Adding..." : "Add Movie"}
             </button>
-            {error && <p className="text-danger mt-3">{typeof error === 'object' ? JSON.stringify(error) : error}</p>}
           </div>
         </div>
       ) : (
-        <div>
-          {/* Movie Update Form */}
+        <div className='my-4'>
+          Update Under Development
         </div>
       )}
+
+      <div className="card my-4">
+        <div className="card-header">View Booked Movies</div>
+        <div className="card-body">
+          <button className="btn btn-info mb-3" onClick={handleViewBookedMovies} disabled={loading}>
+              {loading ? 'Loading...' : 'View Booked Movies'}
+          </button>
+          {error && <div className="alert alert-danger">{error}</div>} {/* Display error if exists */}
+          <ul className="list-group">
+            {bookedMovies.length > 0 ? (
+              bookedMovies.map((booking) => (
+                <li key={booking.id} className="list-group-item">
+                  <h5>Show ID: {booking.show.id}</h5>
+                  <p>Theatre ID: {booking.show.theatre}</p>
+                  <p>Start Time: {new Date(booking.show.start_time).toLocaleString()}</p>
+                  <p>Booked by User ID: {booking.user}</p>
+                  <p>Booking Time: {new Date(booking.booking_time).toLocaleString()}</p>
+                  <p>Seats: {booking.seats.join(', ')}</p>
+                </li>
+              ))
+            ) : (
+              <p>No bookings available</p>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      {error && <p className="text-danger mt-3">{typeof error === 'object' ? JSON.stringify(error) : error}</p>}
     </div>
   );
 };

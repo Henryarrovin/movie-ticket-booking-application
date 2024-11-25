@@ -124,12 +124,11 @@ class AddMovieView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        print("Request data:", request.data)
-        print("Files:", request.FILES)
-
-        shows = []
-
         try:
+            print("Request data:", request.data)
+            print("Files:", request.FILES)
+
+            shows = []
             show_count = len(request.data.getlist("shows[0][theatre]"))
             for i in range(show_count):
                 show_data = {
@@ -138,39 +137,59 @@ class AddMovieView(APIView):
                     "end_time": request.data.getlist(f"shows[{i}][end_time]")[0],
                 }
                 shows.append(show_data)
+
+            if not shows:
+                return Response(
+                    {"error": "Shows field is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            movie_data = {
+                "title": request.data.get("title"),
+                "description": request.data.get("description"),
+                "release_date": request.data.get("release_date"),
+                "image": request.FILES.get("image"),
+                "shows": shows,
+            }
+
+            serializer = MovieSerializer(data=movie_data)
+            if not serializer.is_valid():
+                print("Serializer errors:", serializer.errors)  # Log serializer errors
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            movie = serializer.save()
+
+            for show in shows:
+                theatre_id = show["theatre"]
+                theatre = get_object_or_404(Theatre, id=theatre_id)
+
+                movie_show = MovieShow.objects.create(
+                    movie=movie,
+                    theatre=theatre,
+                    start_time=show["start_time"],
+                    end_time=show["end_time"],
+                )
+
+                for seat_number in range(1, theatre.capacity + 1):
+                    Seat.objects.create(
+                        theatre=theatre,
+                        show=movie_show,
+                        seat_number=f"A{seat_number}",
+                    )
+
+            return Response(
+                {
+                    "message": "Movie added successfully",
+                    "movie": MovieSerializer(movie).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
         except Exception as e:
+            print("An error occurred:", str(e))
             return Response(
-                {"error": f"Failed to parse shows data: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "An internal server error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-        if not shows:
-            return Response(
-                {"error": "Shows field is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        movie_data = {
-            "title": request.data.get("title"),
-            "description": request.data.get("description"),
-            "release_date": request.data.get("release_date"),
-            "image": request.FILES.get("image"),
-            "shows": shows,
-        }
-
-        serializer = MovieSerializer(data=movie_data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        movie = serializer.save()
-
-        return Response(
-            {
-                "message": "Movie added successfully",
-                "movie": MovieSerializer(movie).data,
-            },
-            status=status.HTTP_201_CREATED,
-        )
 
 
 # class UpdateMovieView(APIView):
@@ -188,6 +207,7 @@ class AddMovieView(APIView):
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# NOT YET FULLY DEVELOPED
 class UpdateMovieView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -365,7 +385,7 @@ class BookTicketView(APIView):
 
         show = get_object_or_404(MovieShow, id=show_id)
 
-        seats = Seat.objects.filter(id__in=seat_ids, theatre=show.theatre)
+        seats = Seat.objects.filter(seat_number__in=seat_ids, theatre=show.theatre)
         if len(seats) != len(seat_ids):
             return Response(
                 {"error": "One or more selected seats are invalid for this theatre."},
