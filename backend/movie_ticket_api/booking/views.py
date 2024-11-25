@@ -119,48 +119,50 @@ class RegisterView(APIView):
 
 class AddMovieView(APIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         print("Request data:", request.data)
         print("Files:", request.FILES)
 
-        shows = request.data.get("shows", None)
-        # if shows:
-        #     try:
-        #         request.data["shows"] = json.loads(shows)
-        #     except json.JSONDecodeError:
-        #         return Response(
-        #             {"error": "Invalid format for 'shows' field."},
-        #             status=status.HTTP_400_BAD_REQUEST,
-        #         )
-        if shows:
-            try:
-                shows = json.loads(shows)
-            except json.JSONDecodeError:
-                return Response(
-                    {"error": "Invalid format for 'shows' field."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        shows = []
 
-        serializer = MovieSerializer(data=request.data)
+        try:
+            show_count = len(request.data.getlist("shows[0][theatre]"))
+            for i in range(show_count):
+                show_data = {
+                    "theatre": request.data.getlist(f"shows[{i}][theatre]")[0],
+                    "start_time": request.data.getlist(f"shows[{i}][start_time]")[0],
+                    "end_time": request.data.getlist(f"shows[{i}][end_time]")[0],
+                }
+                shows.append(show_data)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to parse shows data: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not shows:
+            return Response(
+                {"error": "Shows field is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        movie_data = {
+            "title": request.data.get("title"),
+            "description": request.data.get("description"),
+            "release_date": request.data.get("release_date"),
+            "image": request.FILES.get("image"),
+            "shows": shows,
+        }
+
+        serializer = MovieSerializer(data=movie_data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        image_file = request.FILES.get("image")
-        if image_file:
-            if not image_file.content_type.startswith("image/"):
-                return Response(
-                    {"error": "Invalid image type. Only images are allowed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            file_path = default_storage.save(
-                f"movies/{image_file.name}", ContentFile(image_file.read())
-            )
-            serializer.validated_data["image"] = file_path
-
         movie = serializer.save()
+
         return Response(
             {
                 "message": "Movie added successfully",

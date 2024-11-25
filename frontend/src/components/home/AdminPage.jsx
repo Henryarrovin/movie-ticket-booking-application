@@ -432,7 +432,7 @@ const AdminPage = () => {
   useEffect(() => {
     if(token) fetchTheatres();
   }, [token]);
-  
+
   const onDrop = (acceptedFiles) => {
     setImageFile(acceptedFiles[0]);
   };
@@ -449,71 +449,220 @@ const AdminPage = () => {
     }
   };
 
+  // const handleAddMovie = async () => {
+  //   if (!imageFile) {
+  //     setError("Please upload an image before adding the movie.");
+  //     return;
+  //   }
+
+  //   if (shows.length === 0) {
+  //     setError("Please add at least one showtime before adding the movie.");
+  //     return;
+  //   }
+
+  //   const validatedShows = shows.map((show) => {
+  //     if (!show.theatre_id || !show.start_time || !show.end_time) {
+  //       throw new Error("All fields for each show must be filled.");
+  //     }
+  //     const startTimeParsed = Date.parse(show.start_time);
+  //     const endTimeParsed = Date.parse(show.end_time);
+
+  //     if (isNaN(startTimeParsed) || isNaN(endTimeParsed)) {
+  //       throw new Error("Invalid date format for start or end time.");
+  //     }
+  //     return {
+  //       theatre_id: parseInt(show.theatre_id, 10),
+  //       start_time: new Date(show.start_time).toISOString(),
+  //       end_time: new Date(show.end_time).toISOString(),
+  //     };
+  //   });
+
+  //   setLoading(true);
+  //   const formData = new FormData();
+  //   formData.append('title', movieData.title);
+  //   formData.append('release_date', movieData.releaseDate);
+  //   formData.append('description', movieData.description);
+  //   formData.append('image', imageFile);
+  //   validatedShows.forEach((show, index) => {
+  //     formData.append("theatre", show.theatre_id);
+  //     formData.append("start_time", show.start_time);
+  //     formData.append("end_time", show.end_time);
+  //   });
+  //   logFormData(formData);
+
+  //   try {
+  //     await HttpService.addMovie(formData, token);
+  //     alert('Movie added successfully');
+  //     setMovieData({ title: '', releaseDate: '', description: '' });
+  //     setImageFile(null);
+  //     setShows([]);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError(err.response?.data || 'Failed to add movie');
+  //     console.error(err.response);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const handleAddShow = () => {
+  //   if (!newShow.theatre_id || !newShow.start_time || !newShow.end_time) {
+  //     alert("Please fill in all fields for the showtime.");
+  //     return;
+  //   }
+  
+  //   setShows([...shows, { ...newShow }]);
+  //   setNewShow({ theatre_id: "", start_time: "", end_time: "" });
+  // };
+
+  // const handleAddMovie = async () => {
+  //   if (!imageFile) {
+  //     setError("Please upload an image before adding the movie.");
+  //     return;
+  //   }
+  
+  //   if (shows.length === 0) {
+  //     setError("Please add at least one showtime before adding the movie.");
+  //     return;
+  //   }
+  
+  //   // Validate showtimes
+  //   const validatedShows = shows.map((show) => {
+  //     if (!show.theatre_id || !show.start_time || !show.end_time) {
+  //       throw new Error("All fields for each show must be filled.");
+  //     }
+  
+  //     const startTimeParsed = Date.parse(show.start_time);
+  //     const endTimeParsed = Date.parse(show.end_time);
+  
+  //     if (isNaN(startTimeParsed) || isNaN(endTimeParsed)) {
+  //       throw new Error("Invalid date format for start or end time.");
+  //     }
+  
+  //     return {
+  //       theatre: parseInt(show.theatre_id, 10),
+  //       start_time: new Date(show.start_time).toISOString(),
+  //       end_time: new Date(show.end_time).toISOString(),
+  //     };
+  //   });
+  
+  //   setLoading(true);
+  
+  //   // Create FormData instance to send the movie data
+  //   const formData = new FormData();
+  //   formData.append('title', movieData.title);
+  //   formData.append('release_date', movieData.releaseDate);
+  //   formData.append('description', movieData.description);
+  //   formData.append('image', imageFile);
+  
+  //   // Append each showtime's individual fields to FormData
+  //   validatedShows.forEach((show, index) => {
+  //     formData.append(`shows[${index}][theatre]`, show.theatre);
+  //     formData.append(`shows[${index}][start_time]`, show.start_time);
+  //     formData.append(`shows[${index}][end_time]`, show.end_time);
+  //   });
+  //   // formData.append('shows', JSON.stringify(validatedShows));
+  
+  //   // Log formData (useful for debugging)
+  //   logFormData(formData);
+  
+  //   try {
+  //     // Send the form data to the backend
+  //     await HttpService.addMovie(formData, token);  // Send the FormData directly
+  //     alert('Movie added successfully');
+  //     setMovieData({ title: '', releaseDate: '', description: '' });
+  //     setImageFile(null);
+  //     setShows([]);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError(err.response?.data || 'Failed to add movie');
+  //     console.error(err.response);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleAddMovie = async () => {
     if (!imageFile) {
-      setError("Please upload an image before adding the movie.");
-      return;
+        setError("Please upload an image before adding the movie.");
+        return;
     }
 
     if (shows.length === 0) {
-      setError("Please add at least one showtime before adding the movie.");
-      return;
+        setError("Please add at least one showtime before adding the movie.");
+        return;
     }
 
     const validatedShows = shows.map((show) => {
-      if (!show.theatre_id || !show.start_time || !show.end_time) {
-        throw new Error("All fields for each show must be filled.");
-      }
-      const startTimeParsed = Date.parse(show.start_time);
-      const endTimeParsed = Date.parse(show.end_time);
+        if (!show.theatre_id || !show.start_time || !show.end_time) {
+            throw new Error("All fields for each show must be filled.");
+        }
 
-      if (isNaN(startTimeParsed) || isNaN(endTimeParsed)) {
-        throw new Error("Invalid date format for start or end time.");
-      }
-      return {
-        theatre_id: parseInt(show.theatre_id, 10),
-        start_time: new Date(show.start_time).toISOString(),
-        end_time: new Date(show.end_time).toISOString(),
-      };
+        const startTimeParsed = Date.parse(show.start_time);
+        const endTimeParsed = Date.parse(show.end_time);
+
+        if (isNaN(startTimeParsed) || isNaN(endTimeParsed)) {
+            throw new Error("Invalid date format for start or end time.");
+        }
+
+        return {
+            theatre: parseInt(show.theatre_id, 10),
+            start_time: new Date(show.start_time).toISOString(),
+            end_time: new Date(show.end_time).toISOString(),
+        };
     });
 
     setLoading(true);
+
     const formData = new FormData();
     formData.append('title', movieData.title);
     formData.append('release_date', movieData.releaseDate);
     formData.append('description', movieData.description);
     formData.append('image', imageFile);
+
     validatedShows.forEach((show, index) => {
-      formData.append(`shows[${index}][theatre_id]`, show.theatre_id);
-      formData.append(`shows[${index}][start_time]`, show.start_time);
-      formData.append(`shows[${index}][end_time]`, show.end_time);
+        formData.append(`shows[${index}][theatre]`, show.theatre);
+        formData.append(`shows[${index}][start_time]`, show.start_time);
+        formData.append(`shows[${index}][end_time]`, show.end_time);
     });
+
     logFormData(formData);
 
     try {
-      await HttpService.addMovie(formData, token);
-      alert('Movie added successfully');
-      setMovieData({ title: '', releaseDate: '', description: '' });
-      setImageFile(null);
-      setShows([]);
-      setError(null);
+        await HttpService.addMovie(formData, token);
+        alert('Movie added successfully');
+        setMovieData({ title: '', releaseDate: '', description: '' });
+        setImageFile(null);
+        setShows([]);
+        setError(null);
     } catch (err) {
-      setError(err.response?.data || 'Failed to add movie');
-      console.error(err.response);
+        setError(err.response?.data || 'Failed to add movie');
+        console.error(err.response);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
-
+};
+  
+  
+  
   const handleAddShow = () => {
     if (!newShow.theatre_id || !newShow.start_time || !newShow.end_time) {
       alert("Please fill in all fields for the showtime.");
       return;
     }
   
+    const startTimeParsed = Date.parse(newShow.start_time);
+    const endTimeParsed = Date.parse(newShow.end_time);
+  
+    if (isNaN(startTimeParsed) || isNaN(endTimeParsed)) {
+      alert("Invalid date format for start or end time.");
+      return;
+    }
+  
     setShows([...shows, { ...newShow }]);
     setNewShow({ theatre_id: "", start_time: "", end_time: "" });
   };
+  
 
   const handleUpdateMovie = async () => {
     setLoading(true);
@@ -631,8 +780,9 @@ const AdminPage = () => {
               {isDragActive ? (
                 <p>Drop the image here...</p>
               ) : (
-                <p>Drag and drop an image here, or click to select one</p>
+                <p>Drag and drop an image here, or click to select an image</p>
               )}
+              {imageFile && <p className="text-success mt-2">Selected File: {imageFile.name}</p>}
             </div>
 
             <div className="mb-3">
@@ -689,7 +839,7 @@ const AdminPage = () => {
                 <h5>Current Showtimes</h5>
                 <ul>
                   {shows.map((show, index) => (
-                    <li key={index}>{`Theatre: ${show.theatre_id}, Start: ${show.start_time}, End: ${show.end_time}`}</li>
+                    <li key={index}>Theatre: {show.theatre_id}, Start: {show.start_time}, End: {show.end_time}</li>
                   ))}
                 </ul>
               </div>
@@ -698,7 +848,7 @@ const AdminPage = () => {
             <button className="btn btn-success" onClick={handleAddMovie}>
               {loading ? "Adding..." : "Add Movie"}
             </button>
-            {error && <p className="text-danger mt-3">{error}</p>}
+            {error && <p className="text-danger mt-3">{typeof error === 'object' ? JSON.stringify(error) : error}</p>}
           </div>
         </div>
       ) : (

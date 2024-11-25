@@ -31,12 +31,10 @@ class HttpService {
         return response.data;
     }
 
-    async addMovie(movieData, token) {
-        const response = await apiClient.post('/api/admin/add-movie/', movieData, {
+    async addMovie(formData, token) {
+        const response = await apiClient.post('/api/admin/add-movie/', formData, {
             headers: {
-                // 'content-Type': 'application/json',
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
             },
         });
         return response.data;

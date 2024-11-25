@@ -42,18 +42,56 @@ class TheatreSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "location", "capacity"]
 
 
+# class MovieShowSerializer(serializers.ModelSerializer):
+#     # theatre = TheatreSerializer()
+
+#     class Meta:
+#         model = MovieShow
+#         # fields = ["id", "movie", "theatre", "start_time", "end_time"]
+#         fields = ["id", "theatre", "start_time", "end_time"]
+
+
 class MovieShowSerializer(serializers.ModelSerializer):
     # theatre = TheatreSerializer()
+    theatre = serializers.PrimaryKeyRelatedField(queryset=Theatre.objects.all())
 
     class Meta:
         model = MovieShow
-        # fields = ["id", "movie", "theatre", "start_time", "end_time"]
         fields = ["id", "theatre", "start_time", "end_time"]
+
+
+# class MovieSerializer(serializers.ModelSerializer):
+#     likes_count = serializers.SerializerMethodField()
+#     image = serializers.SerializerMethodField()
+#     shows = MovieShowSerializer(many=True)
+
+#     class Meta:
+#         model = Movie
+#         fields = "__all__"
+
+#     def get_likes_count(self, obj):
+#         return Like.objects.filter(movie=obj).count()
+
+#     def get_image(self, obj):
+#         return os.path.basename(obj.image.name) if obj.image else None
+#         # if obj.image:
+#         #     return urljoin(settings.MEDIA_URL, obj.image.name)
+#         # return None
+
+#     def create(self, validated_data):
+#         shows_data = validated_data.pop("shows", [])
+#         movie = Movie.objects.create(**validated_data)
+
+#         for show_data in shows_data:
+#             MovieShow.objects.create(movie=movie, **show_data)
+
+#         return movie
 
 
 class MovieSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    # shows = MovieShowSerializer(many=True, required=True)
     shows = MovieShowSerializer(many=True)
 
     class Meta:
@@ -65,9 +103,6 @@ class MovieSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         return os.path.basename(obj.image.name) if obj.image else None
-        # if obj.image:
-        #     return urljoin(settings.MEDIA_URL, obj.image.name)
-        # return None
 
     def create(self, validated_data):
         shows_data = validated_data.pop("shows", [])
